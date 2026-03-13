@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="SVCE Tirupati Exam Results Portal - Check your semester results by hall ticket number.">
+    <title>SVCE Tirupati — Exam Results</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+
+
+    <!-- Main Content -->
+    <div class="main-container">
+
+        <!-- Logo -->
+        <div class="logo-section">
+            <img src="assets/logo.png.png" alt="SVCE Tirupati">
+            <h2>SVCE Tirupati</h2>
+            <p>Results Portal</p>
+        </div>
+
+        <!-- Search Form -->
+        <div class="form-card">
+            <h3>Search Your Result</h3>
+
+            <!-- Hall Ticket -->
+            <div class="form-group">
+                <label for="hallTicketInput">Hall Ticket Number <span class="required">*</span></label>
+                <input 
+                    type="text" 
+                    id="hallTicketInput" 
+                    class="uppercase"
+                    placeholder="e.g. 25BFA32001" 
+                    autocomplete="off" 
+                    spellcheck="false"
+                    maxlength="15"
+                >
+                <div class="year-detect" id="yearDetect"></div>
+            </div>
+
+            <!-- Year -->
+            <div class="form-group">
+                <label for="yearSelect">Year <span class="required">*</span></label>
+                <select id="yearSelect">
+                    <option value="" disabled selected>Select Year</option>
+                    <option value="1st Year">1st Year</option>
+                    <option value="2nd Year">2nd Year</option>
+                </select>
+                <div class="year-error" id="yearError"></div>
+            </div>
+
+            <!-- Exam Type -->
+            <div class="form-group">
+                <label for="examType">Exam Type <span class="required">*</span></label>
+                <select id="examType">
+                    <option value="" disabled selected>Select Exam Type</option>
+                    <option value="Regular">Regular</option>
+                    <option value="Supplementary">Supplementary</option>
+                </select>
+            </div>
+
+            <!-- Branch (Auto-detected) -->
+            <div class="form-group">
+                <label for="branchInput">Branch <span class="required">*</span></label>
+                <input 
+                    type="text" 
+                    id="branchInput" 
+                    value="CSD" 
+                    readonly 
+                    class="branch-readonly"
+                >
+                <div class="branch-hint">Auto-detected from student data</div>
+            </div>
+
+            <!-- Section -->
+            <div class="form-group">
+                <label for="sectionSelect">Section <span class="required">*</span></label>
+                <select id="sectionSelect" disabled>
+                    <option value="" disabled selected>Select Branch first</option>
+                </select>
+            </div>
+
+            <!-- Submit -->
+            <button class="btn-submit" id="searchBtn">
+                <i class="fas fa-search"></i> Get Result
+            </button>
+        </div>
+
+        <!-- Loader -->
+        <div class="loader" id="loader">
+            <div class="spinner"></div>
+            <p>Fetching result...</p>
+        </div>
+
+        <!-- Result Display Area -->
+        <div class="result-container" id="resultContainer"></div>
+
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2026 <a href="#">Sri Venkateswara College of Engineering</a>, Tirupati.</p>
+        <p>For academic use only.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <script src="js/data.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/pdf.js"></script>
+</body>
+</html>
