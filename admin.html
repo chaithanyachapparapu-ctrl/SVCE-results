@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVCE Admin — Visitor logs</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .admin-container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        .header-content h1 {
+            color: var(--bg-header);
+            font-size: 1.8rem;
+        }
+        
+        .table-card {
+            background: var(--bg-white);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .refresh-btn {
+            background-color: var(--bg-header);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .refresh-btn:hover {
+            background-color: var(--color-primary-hover);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th, td {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        th {
+            background-color: var(--bg-header);
+            color: white;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        td {
+            font-size: 0.85rem;
+            color: var(--text-body);
+        }
+        
+        tbody tr:hover {
+            background-color: var(--bg-hover);
+        }
+
+        .ip-badge {
+            background: #e2e8f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: var(--text-dark);
+            font-weight: bold;
+        }
+
+        .date-col {
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        /* Firebase Error Notice */
+        #fb-error {
+            display: none;
+            background: var(--color-fail-bg);
+            color: var(--color-fail);
+            padding: 15px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--color-fail-border);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="admin-container">
+        <div id="fb-error">
+            <strong>Firebase is missing standard credentials!</strong><br>
+            Tracking will not work properly until you replace the dummy Firebase Config in `app.js` and `admin.html`.
+        </div>
+
+        <div id="loginSection" style="max-width: 400px; margin: 40px auto; padding: 25px; background: var(--bg-white); border-radius: var(--radius-lg); box-shadow: var(--shadow-md); border: 1px solid var(--border-color); display: none;">
+            <h2 style="margin-bottom: 20px; color: var(--bg-header);"><i class="fas fa-lock"></i> Admin Login</h2>
+            <div style="margin-bottom: 15px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem;">Email Address</label>
+                <input type="email" id="adminEmail" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;">
+            </div>
+            <div style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem;">Password</label>
+                <input type="password" id="adminPassword" style="width: 100%; padding: 10px; border: 1px solid var(--border-color); border-radius: 4px;">
+            </div>
+            <button onclick="login()" class="refresh-btn" style="width: 100%; justify-content: center; padding: 12px;">Secure Login</button>
+            <div id="loginError" style="color: var(--color-fail); margin-top: 15px; display: none; font-size: 0.9rem; text-align: center;"></div>
+        </div>
+
+        <div id="adminContent" style="display: none;">
+            <div class="header-content">
+                <h1><i class="fas fa-chart-line"></i> Visitor Logs</h1>
+                <div style="display: flex; gap: 10px;">
+                    <button class="refresh-btn" onclick="fetchLogs()">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                    <button class="refresh-btn" style="background-color: var(--color-fail);" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-card">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>IP Address</th>
+                            <th>Device/Browser</th>
+                            <th>Resolution</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logsTableBody">
+                        <tr>
+                            <td colspan="4" class="empty-state">Loading visitor data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+    <script>
+        // Use the EXACT SAME config as in app.js
+        const firebaseConfig = {
+            apiKey: "AIzaSyBw_2IUe06ZfizYL30dmlWRjGA51Lqg-eI",
+            authDomain: "svce-results.firebaseapp.com",
+            projectId: "svce-results",
+            storageBucket: "svce-results.firebasestorage.app",
+            messagingSenderId: "112537639370",
+            appId: "1:112537639370:web:6a1f6bbc5fe658d43cd733",
+            measurementId: "G-63NRGEVLXB"
+        };
+        
+        let db;
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            if(firebaseConfig.apiKey.includes('Dummy')) {
+                document.getElementById('fb-error').style.display = 'block';
+            }
+
+            // Auth State Observer
+            firebase.auth().onAuthStateChanged((user) => {
+                if (user) {
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('adminContent').style.display = 'block';
+                    fetchLogs();
+                } else {
+                    document.getElementById('loginSection').style.display = 'block';
+                    document.getElementById('adminContent').style.display = 'none';
+                }
+            });
+        } catch (e) {
+            console.error(e);
+        }
+
+        function login() {
+            const email = document.getElementById('adminEmail').value;
+            const password = document.getElementById('adminPassword').value;
+            const errDiv = document.getElementById('loginError');
+            errDiv.style.display = 'none';
+
+            if (!email || !password) {
+                errDiv.innerText = "Please enter email and password.";
+                errDiv.style.display = 'block';
+                return;
+            }
+            
+            firebase.auth().signInWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    errDiv.innerText = "Login failed: " + error.message;
+                    errDiv.style.display = 'block';
+                });
+        }
+
+        function logout() {
+            firebase.auth().signOut();
+        }
+
+        function fetchLogs() {
+            const tbody = document.getElementById('logsTableBody');
+            if(!db || firebaseConfig.apiKey.includes('Dummy')) {
+                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Cannot fetch logs without valid Firebase keys.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Fetching...</td></tr>`;
+
+            db.collection("visits")
+              .orderBy("timestamp", "desc")
+              .limit(50)
+              .get()
+              .then((querySnapshot) => {
+                  if(querySnapshot.empty) {
+                      tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No visitors tracked yet.</td></tr>`;
+                      return;
+                  }
+
+                  tbody.innerHTML = '';
+                  querySnapshot.forEach((doc) => {
+                      const data = doc.data();
+                      
+                      // Format timestamp securely
+                      let timeStr = "Unknown time";
+                      if (data.timestamp && typeof data.timestamp.toDate === 'function') {
+                          timeStr = data.timestamp.toDate().toLocaleString('en-IN', {
+                              dateStyle: 'medium', timeStyle: 'short'
+                          });
+                      }
+
+                      const tr = document.createElement('tr');
+                      tr.innerHTML = `
+                          <td class="date-col">${timeStr}</td>
+                          <td><span class="ip-badge">${data.ip || 'Unknown'}</span></td>
+                          <td>
+                              <div style="font-weight:600; color:var(--text-dark)">${parseUserAgent(data.userAgent).os}</div>
+                              <div style="font-size:0.75rem; color:var(--text-muted)">${parseUserAgent(data.userAgent).browser} (${data.language})</div>
+                          </td>
+                          <td>${data.screenResolution || 'N/A'}</td>
+                      `;
+                      tbody.appendChild(tr);
+                  });
+              })
+              .catch((error) => {
+                  console.error("Error getting documents: ", error);
+                  tbody.innerHTML = `<tr><td colspan="4" class="empty-state" style="color:red">Failed to fetch logs. Check console.</td></tr>`;
+              });
+        }
+
+        // Simple User Agent parser
+        function parseUserAgent(ua) {
+            if(!ua) return { os: 'Unknown OS', browser: 'Unknown Browser' };
+            
+            let os = 'Unknown OS';
+            if(ua.includes('Win')) os = 'Windows';
+            if(ua.includes('Mac')) os = 'MacOS';
+            if(ua.includes('Linux')) os = 'Linux';
+            if(ua.includes('Android')) os = 'Android';
+            if(ua.includes('iPhone') || ua.includes('iPad')) os = 'iOS';
+
+            let browser = 'Unknown Browser';
+            if(ua.includes('Chrome')) browser = 'Chrome';
+            if(ua.includes('Safari') && !ua.includes('Chrome')) browser = 'Safari';
+            if(ua.includes('Firefox')) browser = 'Firefox';
+            if(ua.includes('Edg')) browser = 'Edge';
+
+            return { os, browser };
+        }
+
+        // Removing immediate fetchLogs() call since it is now called inside onAuthStateChanged
+    </script>
+
+</body>
+</html>

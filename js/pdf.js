@@ -74,17 +74,17 @@ function generatePDF() {
     infoY += 8;
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...gray);
-    doc.text('Branch:', col1X, infoY);
+    doc.text('View Type:', col1X, infoY);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...black);
-    doc.text(`${result.branch} - Section ${result.section}`, col1X + 30, infoY);
+    doc.text(result.view || 'N/A', col1X + 30, infoY);
 
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...gray);
-    doc.text('Year:', col2X, infoY);
+    doc.text('Semester:', col2X, infoY);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...black);
-    doc.text(result.year || 'N/A', col2X + 25, infoY);
+    doc.text(result.semester || 'N/A', col2X + 25, infoY);
 
     infoY += 8;
     doc.setFont('helvetica', 'normal');

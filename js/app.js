@@ -1,6 +1,6 @@
 /**
  * SVCE Tirupati — Exam Results Portal
- * Search logic with form fields, year detection, dynamic sections, Firebase tracking
+ * Search logic with form fields, Firebase tracking
  */
 
 (function () {
@@ -10,27 +10,11 @@
     const PASS_MARK = 12;
     const MAX_MARKS = 30;
 
-    // ── Section Map ──
-    const SECTION_MAP = {
-        'CSE':   ['A','B','C','D','E','F','G','H'],
-        'CSC':   ['A','B'],
-        'CSD':   ['A','B'],
-        'CSM':   ['A','B','C','D','E'],
-        'ECE':   ['A','B','C','D','E','F','G','H'],
-        'EEE':   ['A','B','C','D'],
-        'IT':    ['A','B','C'],
-        'MECH':  ['A','B'],
-        'CIVIL': ['A','B']
-    };
-
     // ── DOM Elements ──
     const hallTicketInput = document.getElementById('hallTicketInput');
-    const yearDetect = document.getElementById('yearDetect');
-    const yearSelect = document.getElementById('yearSelect');
-    const yearError = document.getElementById('yearError');
     const examType = document.getElementById('examType');
-    const branchInput = document.getElementById('branchInput');
-    const sectionSelect = document.getElementById('sectionSelect');
+    const viewType = document.getElementById('viewType');
+    const semesterSelect = document.getElementById('semesterSelect');
     const searchBtn = document.getElementById('searchBtn');
     const loader = document.getElementById('loader');
     const resultContainer = document.getElementById('resultContainer');
@@ -39,12 +23,13 @@
     let db = null;
     try {
         const firebaseConfig = {
-            apiKey: "AIzaSyDummy_placeholder",
+            apiKey: "AIzaSyBw_2IUe06ZfizYL30dmlWRjGA51Lqg-eI",
             authDomain: "svce-results.firebaseapp.com",
             projectId: "svce-results",
-            storageBucket: "svce-results.appspot.com",
-            messagingSenderId: "000000000000",
-            appId: "1:000000000000:web:0000000000000000"
+            storageBucket: "svce-results.firebasestorage.app",
+            messagingSenderId: "112537639370",
+            appId: "1:112537639370:web:6a1f6bbc5fe658d43cd733",
+            measurementId: "G-63NRGEVLXB"
         };
         if (typeof firebase !== 'undefined') {
             firebase.initializeApp(firebaseConfig);
@@ -58,22 +43,10 @@
     init();
 
     function init() {
-        // Hall ticket: auto-uppercase + year detection + branch auto-fill
+        // Hall ticket: auto-uppercase
         hallTicketInput.addEventListener('input', (e) => {
             e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '');
-            const val = e.target.value;
-            detectYear(val);
-            autoSelectYear(val);
-            autoFillBranch(val);
         });
-
-        // Year dropdown change → cross-validate with roll number
-        yearSelect.addEventListener('change', () => {
-            crossValidateYear();
-        });
-
-        // Auto-populate sections for CSD branch
-        populateSections('CSD');
 
         // Search
         searchBtn.addEventListener('click', handleSearch);
@@ -82,123 +55,108 @@
         });
 
         hallTicketInput.focus();
+
+        // Track the site visit on load
+        trackVisitor();
     }
 
-    // ── Year Detection Badge ──
-    function detectYear(value) {
-        if (value.startsWith('25')) {
-            yearDetect.innerHTML = '<span class="year-badge y1">📘 1st Year Detected</span>';
-        } else if (value.startsWith('24')) {
-            yearDetect.innerHTML = '<span class="year-badge y2">📙 2nd Year Detected</span>';
-        } else if (value.length >= 2) {
-            yearDetect.innerHTML = '<span style="color: var(--text-light); font-size: 0.75rem;">Year not recognized</span>';
-        } else {
-            yearDetect.innerHTML = '';
+    // ── Rate Limiting ──
+    const MAX_REQUESTS = 5;
+    const TIME_WINDOW = 60000; // 1 minute
+
+    function checkRateLimit() {
+        let history = JSON.parse(sessionStorage.getItem('searchHistory') || '[]');
+        const now = Date.now();
+        
+        // Filter out requests older than TIME_WINDOW
+        history = history.filter(time => now - time < TIME_WINDOW);
+        
+        if (history.length >= MAX_REQUESTS) {
+            return false;
         }
-    }
-
-    // ── Auto-select Year from roll number ──
-    function autoSelectYear(value) {
-        if (value.startsWith('25')) {
-            yearSelect.value = '1st Year';
-            yearError.textContent = '';
-        } else if (value.startsWith('24')) {
-            yearSelect.value = '2nd Year';
-            yearError.textContent = '';
-        }
-    }
-
-    // ── Cross-validate Year vs Roll Number ──
-    function crossValidateYear() {
-        const ht = hallTicketInput.value.trim();
-        const selectedYear = yearSelect.value;
-        yearError.textContent = '';
-
-        if (ht.length >= 2) {
-            if (selectedYear === '1st Year' && !ht.startsWith('25')) {
-                yearError.textContent = '⚠ Roll number doesn\'t start with 25 for 1st Year';
-            } else if (selectedYear === '2nd Year' && !ht.startsWith('24')) {
-                yearError.textContent = '⚠ Roll number doesn\'t start with 24 for 2nd Year';
-            }
-        }
-    }
-
-    // ── Auto-fill Branch as CSD ──
-    function autoFillBranch(value) {
-        // All students in data.js are CSD branch
-        if (value.length >= 2) {
-            branchInput.value = 'CSD';
-        }
-    }
-
-    // ── Populate Sections ──
-    function populateSections(branch) {
-        const sections = SECTION_MAP[branch] || [];
-        sectionSelect.innerHTML = '<option value="" disabled selected>Select Section</option>';
-        sections.forEach(sec => {
-            const opt = document.createElement('option');
-            opt.value = sec;
-            opt.textContent = sec;
-            sectionSelect.appendChild(opt);
-        });
-        sectionSelect.disabled = false;
+        
+        history.push(now);
+        sessionStorage.setItem('searchHistory', JSON.stringify(history));
+        return true;
     }
 
     // ── Search Handler ──
-    function handleSearch() {
+    async function handleSearch() {
         const ht = hallTicketInput.value.trim();
         const exam = examType.value;
-        const branch = branchInput.value;
-        const section = sectionSelect.value;
-        const selectedYear = yearSelect.value;
+        const view = viewType.value;
+        const semester = semesterSelect.value;
 
         // Validation
-        if (!ht) { showFieldError('Please enter your Hall Ticket Number.'); return; }
-        if (!selectedYear) { showFieldError('Please select a Year.'); return; }
-
-        // Cross-validate year vs roll number
-        if (selectedYear === '1st Year' && !ht.startsWith('25')) {
-            showFieldError('Roll number doesn\'t start with 25 for 1st Year selection.');
+        if (!ht) { showFieldError('Please enter your Hallticket number.'); return; }
+        
+        const htRegex = /^[A-Z0-9]{8,12}$/;
+        if (!htRegex.test(ht)) {
+            showFieldError('Invalid Hallticket format. Only alphanumeric characters allowed.');
             return;
         }
-        if (selectedYear === '2nd Year' && !ht.startsWith('24')) {
-            showFieldError('Roll number doesn\'t start with 24 for 2nd Year selection.');
-            return;
-        }
-
+        
         if (!exam) { showFieldError('Please select an Exam Type.'); return; }
-        if (!branch) { showFieldError('Please select your Branch.'); return; }
-        if (!section) { showFieldError('Please select your Section.'); return; }
+        if (!semester) { showFieldError('Please select a Semester.'); return; }
+
+        if (semester !== '1') {
+            showInvalidSemesterError();
+            return;
+        }
 
         // Show loader
         resultContainer.innerHTML = '';
         loader.classList.add('active');
 
-        setTimeout(() => {
+        // Check Rate Limit
+        if (!checkRateLimit()) {
             loader.classList.remove('active');
+            showFieldError('Too many attempts. Please try again in a minute.');
+            return;
+        }
 
-            const result = findResult(ht);
+        try {
+            const result = await findResult(ht);
+            loader.classList.remove('active');
             const found = !!result;
 
             if (result) {
-                displayResult(ht, result, branch, section, exam);
+                displayResult(ht, result, semester, exam, view);
             } else {
                 showNotFound(ht);
             }
 
             // Track to Firebase
-            trackSearch(ht, branch, section, exam, found);
-        }, 500);
+            trackSearch(ht, semester, exam, found);
+        } catch (e) {
+            loader.classList.remove('active');
+            console.error(e);
+            showFieldError('Error fetching result. Please try again.');
+        }
     }
 
     // ── Find Result ──
-    function findResult(hallTicket) {
-        if (typeof STUDENT_DATA === 'undefined') return null;
-        return STUDENT_DATA[hallTicket] || null;
+    async function findResult(hallTicket) {
+        if (!db) {
+            console.warn('Firebase not initialized.');
+            return null;
+        }
+        try {
+            const docRef = db.collection('students').doc(hallTicket);
+            const docSnap = await docRef.get();
+            if (docSnap.exists) {
+                return docSnap.data();
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error("Firebase error getting document:", error);
+            throw error; // Let handleSearch catch it
+        }
     }
 
     // ── Display Result ──
-    function displayResult(hallTicket, result, branch, section, exam) {
+    function displayResult(hallTicket, result, semester, exam, view) {
         const subjects = Object.entries(result.marks).map(([name, marks]) => ({
             name,
             marks,
@@ -211,11 +169,6 @@
         const percentage = ((totalMarks / maxMarks) * 100).toFixed(2);
         const allPassed = result.passed;
         const failedSubjects = subjects.filter(s => !s.passed);
-
-        // Detect year
-        let yearLabel = 'N/A';
-        if (hallTicket.startsWith('25')) yearLabel = '1st Year';
-        else if (hallTicket.startsWith('24')) yearLabel = '2nd Year';
 
         let subjectRows = subjects.map((s, i) => `
             <tr>
@@ -247,10 +200,9 @@
                 </div>
 
                 <div class="result-meta">
-                    <div class="meta-item"><i class="fas fa-code-branch"></i> Branch: <strong>${branch}</strong></div>
-                    <div class="meta-item"><i class="fas fa-users"></i> Section: <strong>${section}</strong></div>
-                    <div class="meta-item"><i class="fas fa-calendar"></i> Year: <strong>${yearLabel}</strong></div>
+                    <div class="meta-item"><i class="fas fa-calendar"></i> Semester: <strong>${semester}</strong></div>
                     <div class="meta-item"><i class="fas fa-file-alt"></i> Exam: <strong>${exam}</strong></div>
+                    <div class="meta-item"><i class="fas fa-eye"></i> View: <strong>${view}</strong></div>
                     ${!allPassed ? `<div class="meta-item"><i class="fas fa-exclamation-triangle" style="color:var(--color-fail);"></i> <strong style="color:var(--color-fail);">${failedSubjects.length} Subject(s) Failed</strong></div>` : ''}
                 </div>
 
@@ -293,8 +245,8 @@
 
         // Store for PDF
         window.__currentResult = {
-            hallTicket, name: result.name, branch, section, exam,
-            year: yearLabel, subjects, totalMarks, maxMarks, percentage, allPassed
+            hallTicket, name: result.name, semester, exam, view,
+            subjects, totalMarks, maxMarks, percentage, allPassed
         };
 
         resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -321,19 +273,23 @@
         `;
     }
 
+    function showInvalidSemesterError() {
+        resultContainer.innerHTML = `
+            <div class="error-card">
+                <div class="error-icon"><i class="fas fa-lock" style="color: #f59e0b; background: #fef3c7;"></i></div>
+                <h3 style="color: #d97706;">Results Unavailable</h3>
+                <p>Currently, only <strong>1st Semester</strong> results are published and available for viewing.</p>
+            </div>
+        `;
+    }
+
     // ── Firebase Tracking ──
-    function trackSearch(hallTicket, branch, section, exam, found) {
+    function trackSearch(hallTicket, semester, exam, found) {
         if (!db) return;
         try {
-            let yearVal = 'Unknown';
-            if (hallTicket.startsWith('25')) yearVal = '1st Year';
-            else if (hallTicket.startsWith('24')) yearVal = '2nd Year';
-
             db.collection('searches').add({
                 hallTicket: hallTicket,
-                branch: branch,
-                section: section,
-                year: yearVal,
+                semester: semester,
                 examType: exam,
                 resultFound: found,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
@@ -341,6 +297,41 @@
         } catch (e) {
             // Silently fail if Firebase not configured
         }
+    }
+
+    // Track initial page visit
+    function trackVisitor() {
+        if (!db) return;
+        try {
+            // Fetch IP
+            fetch('https://api.ipify.org?format=json')
+                .then(response => response.json())
+                .then(data => {
+                    saveVisitInfo(data.ip);
+                })
+                .catch(() => {
+                    // Fallback if IP fetch fails
+                    saveVisitInfo("Unknown");
+                });
+        } catch (e) {
+            // Silently fail
+        }
+    }
+
+    function saveVisitInfo(ip) {
+        if (!db) return;
+        try {
+            const visitorData = {
+                ip: ip,
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                platform: navigator.platform,
+                screenResolution: `${window.screen.width}x${window.screen.height}`,
+                windowSize: `${window.innerWidth}x${window.innerHeight}`,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            db.collection('visits').add(visitorData).catch(() => {});
+        } catch(e) {}
     }
 
     // ── Utility ──

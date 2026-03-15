@@ -1,22 +1,23 @@
 /* =============================================
    SVCE Tirupati — Exam Results Portal
-   Clean, Official Light Theme
+   CampX-style Clean Card Design
    ============================================= */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 /* ── CSS Custom Properties ── */
 :root {
-  --bg-page: #f0f2f5;
+  --bg-page: #ffffff;
   --bg-white: #ffffff;
-  --bg-header: #1a3a6b;
-  --bg-header-dark: #132d55;
+  --bg-header: #3b5998; /* Blue header from screenshot */
+  --bg-button: #1c1f4c; /* Dark navy button from screenshot */
+  --bg-header-dark: #2d4373;
   --bg-input: #ffffff;
   --bg-hover: #f8f9fa;
 
-  --color-primary: #1a3a6b;
-  --color-primary-hover: #15305a;
-  --color-accent: #2563eb;
+  --color-primary: #3b5998;
+  --color-primary-hover: #2d4373;
+  --color-accent: #c0392b;
   --color-pass: #16a34a;
   --color-pass-bg: #f0fdf4;
   --color-pass-border: #bbf7d0;
@@ -27,26 +28,28 @@
 
   --text-dark: #1e293b;
   --text-body: #334155;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
+  --text-muted: #4b5563;
+  --text-light: #9ca3af;
   --text-white: #ffffff;
 
-  --border-color: #d1d5db;
-  --border-light: #e5e7eb;
+  --border-color: #e5e7eb;
+  --border-light: #f3f4f6;
 
   --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
+  --radius-sm: 4px;
+  --radius-md: 4px; /* Screenshot inputs have small border radius */
+  --radius-lg: 8px; /* Card has slightly larger rounded corners */
 
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.12);
 }
 
 /* ── Reset ── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -65,63 +68,33 @@ body {
   min-height: 100vh;
 }
 
-/* ── Header Bar ── */
-.header {
-  background: var(--bg-header);
-  color: var(--text-white);
-  text-align: center;
-  padding: 18px 20px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  position: relative;
-}
-
-.header h1 {
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-}
-
-.header p {
-  font-size: 0.8rem;
-  opacity: 0.8;
-  margin-top: 2px;
-  font-weight: 400;
-}
-
 /* ── Main Container ── */
 .main-container {
   max-width: 520px;
-  margin: 30px auto;
-  padding: 0 16px;
-  padding-top: 10px;
+  margin: 0 auto;
+  padding: 40px 16px 20px;
 }
 
 /* ── Logo Section ── */
 .logo-section {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 28px;
 }
 
 .logo-section img {
-  width: 80px;
-  height: 80px;
+  width: 90px;
+  height: 90px;
   border-radius: 50%;
-  object-fit: cover;
-  box-shadow: var(--shadow-md);
-  border: 3px solid var(--bg-white);
+  object-fit: contain;
+  background-color: var(--bg-white);
+  padding: 10px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0,0,0,0.05);
+  transition: transform 0.3s ease;
 }
 
-.logo-section h2 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-dark);
-  margin-top: 10px;
-}
-
-.logo-section p {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  margin-top: 2px;
+.logo-section img:hover {
+  transform: scale(1.05);
 }
 
 /* ── Form Card ── */
@@ -129,31 +102,42 @@ body {
   background: var(--bg-white);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
-  padding: 28px 24px;
-  border: 1px solid var(--border-light);
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
-.form-card h3 {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-dark);
-  margin-bottom: 20px;
+/* Card Header Band */
+.form-card-header {
+  background: var(--bg-header);
+  padding: 20px 28px;
   text-align: center;
-  padding-bottom: 12px;
-  border-bottom: 2px solid var(--bg-header);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.form-card-header h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-white);
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+/* Card Body */
+.form-card-body {
+  padding: 28px 28px 24px;
 }
 
 /* ── Form Group ── */
 .form-group {
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .form-group label {
   display: block;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-dark);
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
 .form-group label .required {
@@ -163,7 +147,7 @@ body {
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 10px 14px;
+  padding: 12px 16px;
   font-size: 0.92rem;
   font-family: var(--font-primary);
   color: var(--text-dark);
@@ -179,15 +163,15 @@ body {
 .form-group select {
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
-  background-position: right 14px center;
-  padding-right: 36px;
+  background-position: right 16px center;
+  padding-right: 40px;
   cursor: pointer;
 }
 
 .form-group input:focus,
 .form-group select:focus {
-  border-color: var(--color-accent);
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  border-color: var(--bg-header);
+  box-shadow: 0 0 0 3px rgba(27, 31, 59, 0.1);
 }
 
 .form-group input::placeholder {
@@ -255,26 +239,27 @@ body {
 /* ── Submit Button ── */
 .btn-submit {
   width: 100%;
-  padding: 12px;
-  font-size: 0.95rem;
+  padding: 14px;
+  font-size: 1rem;
   font-weight: 700;
   font-family: var(--font-primary);
   color: var(--text-white);
-  background: var(--bg-header);
+  background: var(--bg-button);
   border: none;
   border-radius: var(--radius-md);
   cursor: pointer;
-  transition: background 0.2s ease, transform 0.1s ease;
-  margin-top: 6px;
-  letter-spacing: 0.02em;
+  transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+  margin-top: 8px;
+  letter-spacing: 0.03em;
 }
 
 .btn-submit:hover {
-  background: var(--color-primary-hover);
+  background: #111333;
+  box-shadow: 0 4px 14px rgba(28, 31, 76, 0.25);
 }
 
 .btn-submit:active {
-  transform: scale(0.99);
+  transform: scale(0.98);
 }
 
 .btn-submit:disabled {
@@ -304,7 +289,9 @@ body {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .loader p {
@@ -322,7 +309,7 @@ body {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
   overflow: hidden;
-  border: 1px solid var(--border-light);
+  border: 1px solid rgba(0, 0, 0, 0.04);
   animation: slideUp 0.35s ease;
 }
 
@@ -452,8 +439,13 @@ body {
   font-weight: 700;
 }
 
-.subject-pass { color: var(--color-pass); }
-.subject-fail { color: var(--color-fail); }
+.subject-pass {
+  color: var(--color-pass);
+}
+
+.subject-fail {
+  color: var(--color-fail);
+}
 
 /* Summary Row */
 .result-summary {
@@ -578,6 +570,7 @@ body {
     opacity: 0;
     transform: translateY(16px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -585,17 +578,23 @@ body {
 }
 
 /* ── Utility ── */
-.hidden { display: none !important; }
+.hidden {
+  display: none !important;
+}
 
 /* ── Responsive ── */
 @media (max-width: 560px) {
   .main-container {
-    margin: 20px auto;
-    padding: 0 12px;
+    margin: 0 auto;
+    padding: 24px 12px 16px;
   }
 
-  .form-card {
-    padding: 22px 18px;
+  .form-card-body {
+    padding: 22px 18px 20px;
+  }
+
+  .form-card-header {
+    padding: 16px 20px;
   }
 
   .result-header {

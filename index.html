@@ -10,83 +10,73 @@
 </head>
 <body>
 
-
-
     <!-- Main Content -->
     <div class="main-container">
 
         <!-- Logo -->
         <div class="logo-section">
-            <img src="assets/logo.png.png" alt="SVCE Tirupati">
-            <h2>SVCE Tirupati</h2>
-            <p>Results Portal</p>
+            <img src="assets/campx-logo.jpg" alt="CampX">
         </div>
 
         <!-- Search Form -->
         <div class="form-card">
-            <h3>Search Your Result</h3>
-
-            <!-- Hall Ticket -->
-            <div class="form-group">
-                <label for="hallTicketInput">Hall Ticket Number <span class="required">*</span></label>
-                <input 
-                    type="text" 
-                    id="hallTicketInput" 
-                    class="uppercase"
-                    placeholder="e.g. 25BFA32001" 
-                    autocomplete="off" 
-                    spellcheck="false"
-                    maxlength="15"
-                >
-                <div class="year-detect" id="yearDetect"></div>
+            <div class="form-card-header">
+                <h3>Exam Results</h3>
             </div>
 
-            <!-- Year -->
-            <div class="form-group">
-                <label for="yearSelect">Year <span class="required">*</span></label>
-                <select id="yearSelect">
-                    <option value="" disabled selected>Select Year</option>
-                    <option value="1st Year">1st Year</option>
-                    <option value="2nd Year">2nd Year</option>
-                </select>
-                <div class="year-error" id="yearError"></div>
-            </div>
+            <div class="form-card-body">
+                <!-- Hallticket number -->
+                <div class="form-group">
+                    <label for="hallTicketInput">Hallticket number <span class="required">*</span></label>
+                    <input 
+                        type="text" 
+                        id="hallTicketInput" 
+                        class="uppercase"
+                        autocomplete="off" 
+                        spellcheck="false"
+                        maxlength="15"
+                    >
+                </div>
 
-            <!-- Exam Type -->
-            <div class="form-group">
-                <label for="examType">Exam Type <span class="required">*</span></label>
-                <select id="examType">
-                    <option value="" disabled selected>Select Exam Type</option>
-                    <option value="Regular">Regular</option>
-                    <option value="Supplementary">Supplementary</option>
-                </select>
-            </div>
+                <!-- Select Exam Type -->
+                <div class="form-group">
+                    <label for="examType">Select Exam Type <span class="required">*</span></label>
+                    <select id="examType">
+                        <option value="" disabled selected>-- Select Exam Type --</option>
+                        <option value="Regular">Regular</option>
+                        <option value="Supplementary">Supplementary</option>
+                    </select>
+                </div>
 
-            <!-- Branch (Auto-detected) -->
-            <div class="form-group">
-                <label for="branchInput">Branch <span class="required">*</span></label>
-                <input 
-                    type="text" 
-                    id="branchInput" 
-                    value="CSD" 
-                    readonly 
-                    class="branch-readonly"
-                >
-                <div class="branch-hint">Auto-detected from student data</div>
-            </div>
+                <!-- View Type -->
+                <div class="form-group">
+                    <label for="viewType">View Type</label>
+                    <select id="viewType">
+                        <option value="Single Semester" selected>Single Semester</option>
+                    </select>
+                </div>
 
-            <!-- Section -->
-            <div class="form-group">
-                <label for="sectionSelect">Section <span class="required">*</span></label>
-                <select id="sectionSelect" disabled>
-                    <option value="" disabled selected>Select Branch first</option>
-                </select>
-            </div>
+                <!-- Semester -->
+                <div class="form-group">
+                    <label for="semesterSelect">Semester <span class="required">*</span></label>
+                    <select id="semesterSelect">
+                        <option value="" disabled selected>-- Select Semester --</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="7">7</option>
+                        <option value="8">8</option>
+                    </select>
+                </div>
 
-            <!-- Submit -->
-            <button class="btn-submit" id="searchBtn">
-                <i class="fas fa-search"></i> Get Result
-            </button>
+                <!-- Submit -->
+                <button class="btn-submit" id="searchBtn">
+                    Get Result
+                </button>
+            </div>
         </div>
 
         <!-- Loader -->
@@ -114,7 +104,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 
-    <script src="js/data.js"></script>
     <script src="js/app.js"></script>
     <script src="js/pdf.js"></script>
 </body>
