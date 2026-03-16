@@ -229,14 +229,27 @@
             firebase.auth().signOut();
         }
 
+        // Helper: create a single-cell status row safely (no innerHTML)
+        function setTableStatus(tbody, message, isError) {
+            while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+            const tr = document.createElement('tr');
+            const td = document.createElement('td');
+            td.setAttribute('colspan', '4');
+            td.className = 'empty-state';
+            if (isError) td.style.color = 'red';
+            td.textContent = message;
+            tr.appendChild(td);
+            tbody.appendChild(tr);
+        }
+
         function fetchLogs() {
             const tbody = document.getElementById('logsTableBody');
             if(!db || firebaseConfig.apiKey.includes('Dummy')) {
-                tbody.innerHTML = `<tr><td colspan="4" class="empty-state">Cannot fetch logs without valid Firebase keys.</td></tr>`;
+                setTableStatus(tbody, 'Cannot fetch logs without valid Firebase keys.', false);
                 return;
             }
 
-            tbody.innerHTML = `<tr><td colspan="4" class="empty-state"><i class="fas fa-spinner fa-spin"></i> Fetching...</td></tr>`;
+            setTableStatus(tbody, 'Fetching...', false);
 
             db.collection("visits")
               .orderBy("timestamp", "desc")
@@ -244,11 +257,12 @@
               .get()
               .then((querySnapshot) => {
                   if(querySnapshot.empty) {
-                      tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No visitors tracked yet.</td></tr>`;
+                      setTableStatus(tbody, 'No visitors tracked yet.', false);
                       return;
                   }
 
-                  tbody.innerHTML = '';
+                  while (tbody.firstChild) tbody.removeChild(tbody.firstChild);
+
                   querySnapshot.forEach((doc) => {
                       const data = doc.data();
                       
@@ -260,22 +274,46 @@
                           });
                       }
 
+                      const parsed = parseUserAgent(data.userAgent);
+
+                      // Build row with safe DOM methods — no innerHTML
                       const tr = document.createElement('tr');
-                      tr.innerHTML = `
-                          <td class="date-col">${timeStr}</td>
-                          <td><span class="ip-badge">${data.ip || 'Unknown'}</span></td>
-                          <td>
-                              <div style="font-weight:600; color:var(--text-dark)">${parseUserAgent(data.userAgent).os}</div>
-                              <div style="font-size:0.75rem; color:var(--text-muted)">${parseUserAgent(data.userAgent).browser} (${data.language})</div>
-                          </td>
-                          <td>${data.screenResolution || 'N/A'}</td>
-                      `;
+
+                      const tdTime = document.createElement('td');
+                      tdTime.className = 'date-col';
+                      tdTime.textContent = timeStr;
+
+                      const tdIp = document.createElement('td');
+                      const ipSpan = document.createElement('span');
+                      ipSpan.className = 'ip-badge';
+                      ipSpan.textContent = data.ip || 'Unknown';
+                      tdIp.appendChild(ipSpan);
+
+                      const tdDevice = document.createElement('td');
+                      const osDiv = document.createElement('div');
+                      osDiv.style.fontWeight = '600';
+                      osDiv.style.color = 'var(--text-dark)';
+                      osDiv.textContent = parsed.os;
+                      const browserDiv = document.createElement('div');
+                      browserDiv.style.fontSize = '0.75rem';
+                      browserDiv.style.color = 'var(--text-muted)';
+                      browserDiv.textContent = parsed.browser + ' (' + (data.language || 'N/A') + ')';
+                      tdDevice.appendChild(osDiv);
+                      tdDevice.appendChild(browserDiv);
+
+                      const tdRes = document.createElement('td');
+                      tdRes.textContent = data.screenResolution || 'N/A';
+
+                      tr.appendChild(tdTime);
+                      tr.appendChild(tdIp);
+                      tr.appendChild(tdDevice);
+                      tr.appendChild(tdRes);
                       tbody.appendChild(tr);
                   });
               })
               .catch((error) => {
                   console.error("Error getting documents: ", error);
-                  tbody.innerHTML = `<tr><td colspan="4" class="empty-state" style="color:red">Failed to fetch logs. Check console.</td></tr>`;
+                  setTableStatus(tbody, 'Failed to fetch logs. Check console.', true);
               });
         }
 
