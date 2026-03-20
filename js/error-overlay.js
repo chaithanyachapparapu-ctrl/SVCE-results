@@ -4,11 +4,9 @@
     if (!resultContainer) return;
 
     const observer = new MutationObserver(function() {
-        // Check if error.gif was just injected into the result container
+
         const errorImg = resultContainer.querySelector('img[src="assets/error.gif"]');
         if (!errorImg) return;
-
-        // Clear the result container (remove the small error card)
         resultContainer.innerHTML = '';
 
         // Create the fullscreen overlay
